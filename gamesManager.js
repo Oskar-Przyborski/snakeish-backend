@@ -1,8 +1,9 @@
 import dataManager from "./dataManager.js"
 import defaultPlayerData from "./defaultPlayerData.js";
+import directionToVector from "./directionToVector.js";
 
 const MovePlayerSnake = (player) => {
-    const direction = player.direction;
+    const direction = directionToVector(player.direction);
     const snake = player.snake;
     const head = snake[0];
     const newHead = {
@@ -29,7 +30,8 @@ const CheckAppleColisionNext = (player, room) => {
     const snake = player.snake;
     const head = snake[0];
     const apple = room.apple;
-    return head.x + player.direction.x == apple.x && head.y + player.direction.y == apple.y;
+    const playerDirection = directionToVector(player.direction);
+    return head.x + playerDirection.x == apple.x && head.y + playerDirection.y == apple.y;
 }
 const CheckPlayerEatsApple = (player, room) => {
     if (CheckAppleColisionNext(player, room)) {
@@ -58,7 +60,7 @@ const CheckPlayerCollision = (player, room) => CheckPlayerTailCollision(player) 
 const RestartPlayer = (player) => {
     player.snake.length = 1;
     SetPlayerRandomPosition(player, dataManager.FindRoom(player.roomID));
-    player.direction = { x: defaultPlayerData.direction.x, y: defaultPlayerData.direction.y };
+    player.direction = "right";
     player.score = 0;
 }
 
@@ -66,7 +68,6 @@ const UpdateGame = (roomId) => {
     const room = dataManager.FindRoom(roomId);
     if (!room) return;
     const players = room.players;
-    console.log(players.map(e => e.snake))
     for (let i = 0; i < players.length; i++) {
         const player = players[i];
         player.direction = player.targetDirection;

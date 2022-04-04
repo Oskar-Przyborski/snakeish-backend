@@ -7,13 +7,7 @@ export default {
             "y": 8
         }
     ],
-    "direction": {
-        "x": 1,
-        "y": 0
-    },
-    "targetDirection": {
-        "x": 1,
-        "y": 0
-    },
+    "direction": "right",
+    "targetDirection": "right",
     "score": 0
 }
