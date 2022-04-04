@@ -6,9 +6,10 @@ import gamesManager from './gamesManager.js'
 const httpServer = createServer();
 const io = new Server(httpServer, {
     cors: {
-      origin: '*',
+        origin: "http://localhost:3000",
+        methods: ["GET", "POST"]
     }
-  });
+});
 
 const FRAME_TIME = 500
 const io_rooms = io.of("/rooms")
