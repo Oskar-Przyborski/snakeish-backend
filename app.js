@@ -6,7 +6,7 @@ import gamesManager from './gamesManager.js'
 const httpServer = createServer();
 const io = new Server(httpServer, {
     cors: {
-        origin: "*",
+        origin: "https://snakeish.vercel.app",
         methods: ["GET", "POST"],
         credentials: true
     }
