@@ -6,13 +6,14 @@ import gamesManager from './gamesManager.js'
 const httpServer = createServer();
 const io = new Server(httpServer, {
     cors: {
+        //origin: 'http://localhost:3000',
         origin: "https://snakeish.vercel.app",
         methods: ["GET", "POST"],
         credentials: true
     }
 });
 
-const FRAME_TIME = 500
+const FRAME_TIME = 300
 const io_rooms = io.of("/rooms")
 io_rooms.on('connection', socket => {
     console.log("someone conencterd")
