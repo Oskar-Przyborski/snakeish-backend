@@ -1,5 +1,6 @@
 export default {
     "roomID": "",
+    "name": "anonymous",
     "socketID": "",
     "snake": [
         {

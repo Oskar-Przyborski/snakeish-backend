@@ -95,9 +95,16 @@ const UpdateAllRooms = (socket) => {
         const players = room.players;
         for (let j = 0; j < players.length; j++) {
             const player = players[j];
-            const otherPlayers = [...players];
+            const otherPlayers = [...players.map(p=>{return {name:p.name, score:p.score, snake:p.snake}})];
             otherPlayers.splice(j, 1);
-            socket.to(player.socketID).emit("game-update", { ...player, apple: room.apple, otherPlayers });
+            const data = {
+                snake: player.snake,
+                name: player.name,
+                apple: room.apple,
+                score: player.score,
+                otherPlayers: otherPlayers
+            }
+            socket.to(player.socketID).emit("game-update", data);
         }
     }
 }
