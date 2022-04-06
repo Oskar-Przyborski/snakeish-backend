@@ -48,10 +48,10 @@ const UpdatePlayerTargetDirection = (room_id, player_id, direction) => {
     const player = GetPlayerInRoom(room, player_id);
     if (!player) return;
     //can not move backwards
-    if(player.targetDirection == "up" && direction == "down") return;
-    if(player.targetDirection == "down" && direction == "up") return;
-    if(player.targetDirection == "left" && direction == "right") return;
-    if(player.targetDirection == "right" && direction == "left") return;
+    if(player.direction == "up" && direction == "down") return;
+    if(player.direction == "down" && direction == "up") return;
+    if(player.direction == "left" && direction == "right") return;
+    if(player.direction == "right" && direction == "left") return;
     player.targetDirection = direction;
 }
 const UpdateApplePosition = (room_id, x, y) => {
