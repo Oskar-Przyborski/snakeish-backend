@@ -30,13 +30,14 @@ const FindRoom = (room_id) => {
 const GetPlayerInRoom = (room, player_id) => {
     return room.players.find(player => player.socketID === player_id);
 }
-const AddPlayerToRoom = (room_id, player_id) => {
+const AddPlayerToRoom = (room_id, player_id, player_name) => {
     const room = GetRoom(room_id);
     if (!room) return;
     const player = { ...defaultPlayerData }
     player.socketID = player_id;
     player.roomID = room_id;
     player.snake = [{ x: 0, y: 0 }];
+    player.name = player_name;
     room.players.push(player);
     gamesManager.SetPlayerRandomPosition(player, room)
     return player;

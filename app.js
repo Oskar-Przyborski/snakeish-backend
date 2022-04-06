@@ -17,10 +17,10 @@ const io_rooms = io.of("/rooms")
 io_rooms.on('connection', socket => {
     console.log("someone conencterd")
     let room_id = null;
-    socket.on('join-room', _room_id => {
+    socket.on('join-room', (_room_id, player_name) => {
         room_id = _room_id;
         socket.join(_room_id)
-        dataManager.AddPlayerToRoom(_room_id, socket.id)
+        dataManager.AddPlayerToRoom(_room_id, socket.id, player_name)
         console.log(`socket ${socket.id} joined room ${_room_id}`)
     })
     socket.on('update-target-direction', (direction) => {
