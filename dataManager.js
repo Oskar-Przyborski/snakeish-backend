@@ -1,91 +1,62 @@
-import defaultPlayerData from "./defaultPlayerData.js";
-import gamesManager from "./gamesManager.js";
+import Room from "./Classes/Room.js";
 
+/**
+ * @type {Array<Room>}
+ */
 const rooms = [];
 
-const CreateNewRoom = (room_id) => {
-    if (FindRoom(room_id)) return;
-    const room = {
-        room_id: room_id,
-        players: [],
-        game_state: "waiting",
-        grid_size: 16,
-        apple: {
-            x: 0,
-            y: 0
+/**
+ * Description
+ * @param {String} room_ID
+ * @returns {Room | null}
+ */
+function FindRoomByID(room_ID) {
+    for (let i = 0; i < rooms.length; i++) {
+        if (rooms[i].room_ID === room_ID) {
+            return rooms[i];
         }
     }
-    rooms.push(room);
-    gamesManager.GenerateNewApple(room)
-    return room;
+    return null;
 }
-const GetRoom = (room_id) => {
-    let foundRoom = FindRoom(room_id);
-    if (foundRoom) return foundRoom;
-    return CreateNewRoom(room_id);
+/**
+ * Description
+ * @returns {Array<Room>}
+ */
+function GetRooms() {
+    return rooms
 }
-const FindRoom = (room_id) => {
-    return rooms.find(room => room.room_id === room_id);
+function GetRoomsJSON() {
+    return GetRooms().map(room => room.ToJSON());
 }
-const GetPlayerInRoom = (room, player_id) => {
-    return room.players.find(player => player.socketID === player_id);
+/**
+ * Description
+ * @param {String} room_ID
+ * @param {String} frame_time
+ * @param {String} grid_size
+ * @returns {Boolean}
+ */
+function CreateNewRoom(room_ID, frame_time, grid_size) {
+    if (FindRoomByID(room_ID) != null) return false;
+    if (room_ID == "" || room_ID == null) return false;
+    if (frame_time <= 50 || frame_time > 2500||frame_time == null) return false;
+    if (grid_size < 5 || grid_size > 50|| grid_size == null) return false;
+    
+    const newRoom = new Room(room_ID, frame_time, grid_size);
+    newRoom.StartAfkTimeout();
+    rooms.push(newRoom);
+    return true;
 }
-const AddPlayerToRoom = (room_id, player_id, player_name) => {
-    const room = GetRoom(room_id);
-    if (!room) return;
-    const player = { ...defaultPlayerData }
-    player.socketID = player_id;
-    player.roomID = room_id;
-    player.snake = [{ x: 0, y: 0 }];
-    player.name = player_name;
-    room.players.push(player);
-    gamesManager.SetPlayerRandomPosition(player, room)
-    return player;
-}
-const UpdatePlayerTargetDirection = (room_id, player_id, direction) => {
-    const room = FindRoom(room_id);
-    if (!room) return;
-    const player = GetPlayerInRoom(room, player_id);
-    if (!player) return;
-    //can not move backwards
-    if(player.direction == "up" && direction == "down") return;
-    if(player.direction == "down" && direction == "up") return;
-    if(player.direction == "left" && direction == "right") return;
-    if(player.direction == "right" && direction == "left") return;
-    player.targetDirection = direction;
-}
-const UpdateApplePosition = (room_id, x, y) => {
-    const room = FindRoom(room_id);
-    if (!room) return;
-    room.apple.x = x;
-    room.apple.y = y;
-}
-const RemovePlayerFromRoom = (room_id, player_id) => {
-    const room = FindRoom(room_id);
-    if (!room) return;
-    const player = GetPlayerInRoom(room, player_id);
-    if (!player) return;
-    //remove player
-    room.players.splice(room.players.indexOf(player), 1);
 
-    //if room is empty, delete it
-    if (room.players.length === 0)
-        DeleteRoom(room_id);
-
-}
-const DeleteRoom = (room_id) => {
-    const room = FindRoom(room_id);
-    if (!room) return;
+function RemoveRoom(room) {
+    clearTimeout(room.timeout);
     rooms.splice(rooms.indexOf(room), 1);
 }
 export default {
-    rooms,
-    CreateNewRoom,
-    GetRoom,
-    FindRoom,
-    GetPlayerInRoom,
-    AddPlayerToRoom,
-    UpdatePlayerTargetDirection,
-    UpdateApplePosition,
-    RemovePlayerFromRoom
+    Rooms: {
+        FindRoomByID,
+        GetRooms,
+        GetRoomsJSON,
+        CreateNewRoom,
+        RemoveRoom
+    }
 }
