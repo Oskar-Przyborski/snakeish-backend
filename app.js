@@ -1,7 +1,7 @@
 import { createServer } from "http";
 import express from "express";
 import { Server } from "socket.io";
-import DataManager from "./DataManager.js";
+import Rooms from "./DataManager.js";
 import cors from "cors";
 
 const corsData = {
@@ -22,7 +22,7 @@ io_rooms.on('connection', socket => {
     let room = null;
     socket.on("join-room", (roomId) => {
         console.log(`${socket.id} joining room ${roomId}`);
-        const FoundRoom = DataManager.Rooms.FindRoomByID(roomId)
+        const FoundRoom = Rooms.FindRoomByID(roomId)
         if (FoundRoom) {
             socket.join(roomId)
             FoundRoom.AddPlayer(socket)
@@ -62,13 +62,13 @@ io_rooms.on('connection', socket => {
     })
 })
 app.get("/api/rooms", (req, res) => {
-    const rooms = DataManager.Rooms.GetRoomsJSON();
+    const rooms = Rooms.GetRoomsJSON();
     res.status(200).send(rooms)
 })
 app.post("/api/room-exists", (req, res) => {
     const room_ID = req.body.room_ID;
     if (room_ID == null) { res.status(400).json({ error: "room_ID not specified" }); return; }
-    const room = DataManager.Rooms.FindRoomByID(room_ID);
+    const room = Rooms.FindRoomByID(room_ID);
     if (room) {
         res.status(200).json({ exists: true });
     } else {
@@ -83,7 +83,7 @@ app.post("/api/create-room", (req, res) => {
     const grid_size = req.body.grid_size;
     if (grid_size == null) { res.status(400).send("grid_size not specified"); return; }
 
-    const resp = DataManager.Rooms.CreateNewRoom(room_ID, frame_time, grid_size);
+    const resp = Rooms.CreateNewRoom(room_ID, frame_time, grid_size);
     if (resp) res.status(200).send("Room created");
     else res.status(400).send("Room already exists");
 })

@@ -38,9 +38,9 @@ function GetRoomsJSON() {
 function CreateNewRoom(room_ID, frame_time, grid_size) {
     if (FindRoomByID(room_ID) != null) return false;
     if (room_ID == "" || room_ID == null) return false;
-    if (frame_time <= 50 || frame_time > 2500||frame_time == null) return false;
-    if (grid_size < 5 || grid_size > 50|| grid_size == null) return false;
-    
+    if (frame_time <= 50 || frame_time > 2500 || frame_time == null) return false;
+    if (grid_size < 5 || grid_size > 50 || grid_size == null) return false;
+
     const newRoom = new Room(room_ID, frame_time, grid_size);
     newRoom.StartAfkTimeout();
     rooms.push(newRoom);
@@ -52,11 +52,9 @@ function RemoveRoom(room) {
     rooms.splice(rooms.indexOf(room), 1);
 }
 export default {
-    Rooms: {
-        FindRoomByID,
-        GetRooms,
-        GetRoomsJSON,
-        CreateNewRoom,
-        RemoveRoom
-    }
+    FindRoomByID,
+    GetRooms,
+    GetRoomsJSON,
+    CreateNewRoom,
+    RemoveRoom
 }
