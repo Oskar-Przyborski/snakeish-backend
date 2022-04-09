@@ -1,7 +1,7 @@
 import { createServer } from "http";
 import express from "express";
 import { Server } from "socket.io";
-import Rooms from "./Utils/DataManager.js";
+import { Rooms } from "./Utils/DataManager.js";
 import cors from "cors";
 
 const corsData = {
