@@ -52,9 +52,11 @@ function RemoveRoom(room) {
     rooms.splice(rooms.indexOf(room), 1);
 }
 export default {
-    FindRoomByID,
-    GetRooms,
-    GetRoomsJSON,
-    CreateNewRoom,
-    RemoveRoom
+    Room: {
+        FindRoomByID,
+        GetRooms,
+        GetRoomsJSON,
+        CreateNewRoom,
+        RemoveRoom
+    }
 }
