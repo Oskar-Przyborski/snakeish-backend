@@ -1,6 +1,6 @@
 import Player from './Player.js';
 import io_rooms from '../app.js';
-import DataManager from '../DataManager.js';
+import DataManager from '../Utils/DataManager.js';
 export default class Room {
     room_ID;
     /**

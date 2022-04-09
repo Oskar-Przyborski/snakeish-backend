@@ -1,4 +1,4 @@
-import Room from "./Classes/Room.js";
+import Room from "../Classes/Room.js";
 
 /**
  * @type {Array<Room>}
