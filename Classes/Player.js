@@ -29,8 +29,6 @@ export default class Player {
     }
     ToJSON() {
         return {
-            room_ID: this.room.room_ID,
-            socket_ID: this.socket.id,
             isPlaying: this.isPlaying,
             gameData: this.gameData == null ? null : this.gameData.ToJSON()
         }

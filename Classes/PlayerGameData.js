@@ -83,8 +83,6 @@ export default class PlayerGameData {
             name: this.name,
             score: this.score,
             snake: this.snake,
-            direction: this.direction,
-            targetDirection: this.targetDirection
         }
     }
 }
