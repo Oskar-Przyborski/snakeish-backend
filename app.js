@@ -77,15 +77,12 @@ app.post("/api/room-exists", (req, res) => {
 })
 app.post("/api/create-room", (req, res) => {
     const room_ID = req.body.room_ID;
-    if (room_ID == null) { res.status(400).send("room_ID not specified"); return; }
     const frame_time = req.body.frame_time;
-    if (frame_time == null) { res.status(400).send("frame_time not specified"); return; }
     const grid_size = req.body.grid_size;
-    if (grid_size == null) { res.status(400).send("grid_size not specified"); return; }
 
     const resp = DataManager.Rooms.CreateNewRoom(room_ID, frame_time, grid_size);
-    if (resp) res.status(200).send("Room created");
-    else res.status(400).send("Room already exists");
+    if (resp.error) res.status(400).send(resp.errorMessage);
+    else res.status(200).send("Room created");
 })
 
 httpServer.listen(process.env.PORT || 8080, () => {
