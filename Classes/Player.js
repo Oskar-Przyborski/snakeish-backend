@@ -19,11 +19,16 @@ export default class Player {
      * @param {String} name
      * @returns {any}
     */
-    JoinGame(name) {
+    JoinGame(name, callback) {
+        if (name == null) { callback(true, "name not specified"); return; }
+        if (name == "") { callback(true, "name is empty"); return; }
+        if (name.length > 10) { callback(true, "name should be shorter than 11 characters"); return; }
+        if (this.isPlaying) { callback(true, "already playing"); return; }
         this.isPlaying = true;
         this.gameData = new PlayerGameData(this, name);
+        callback(false, null)
     }
-    LeaveGame(){
+    LeaveGame() {
         this.isPlaying = false;
         this.gameData = null;
     }

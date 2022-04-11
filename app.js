@@ -30,11 +30,11 @@ io_rooms.on('connection', socket => {
             room = FoundRoom
         }
     })
-    socket.on("join-game", (name) => {
+    socket.on("join-game", (name, callback) => {
         if (!room) return
         const player = room.FindPlayer(socket.id)
         if (!player) return;
-        player.JoinGame(name)
+        player.JoinGame(name, callback)
         console.log(`${socket.id} joined game in ${room.room_ID}`);
     })
     socket.on("update-target-direction", targetDirection => {
