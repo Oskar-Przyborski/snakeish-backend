@@ -95,4 +95,7 @@ export default class Room {
             this.apple.y = Math.floor(Math.random() * this.grid_size);
         } while (this.GetPlayersInGame().some(player => player.gameData.snake.some(segment => segment.x === this.apple.x && segment.y === this.apple.y)));
     }
+    IsNameAlreadyTaken(name) {
+        return this.GetPlayersInGame().some(player => player.gameData.name === name);
+    }
 }
