@@ -30,7 +30,8 @@ export default class Player {
     ToJSON() {
         return {
             isPlaying: this.isPlaying,
-            gameData: this.gameData == null ? null : this.gameData.ToJSON()
+            gameData: this.gameData == null ? null : this.gameData.ToJSON(),
+            socketID: this.socket.id
         }
     }
 }
