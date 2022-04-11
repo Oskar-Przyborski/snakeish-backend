@@ -7,11 +7,13 @@ export default class PlayerGameData {
     name = "anonymous";
     snake = [{ x: 0, y: 0 }];
     score = 0;
+    color = "#5cd67f"
     direction = "right";
     targetDirection = "right";
-    constructor(player, name) {
+    constructor(player, name, color) {
         this.player = player;
         this.name = name;
+        this.color = color;
         this.Reset()
     }
     EatApple() {
@@ -83,6 +85,7 @@ export default class PlayerGameData {
             name: this.name,
             score: this.score,
             snake: this.snake,
+            color: this.color,
         }
     }
 }
