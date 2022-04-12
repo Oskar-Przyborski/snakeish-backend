@@ -1,5 +1,6 @@
 import PlayerGameData from "./PlayerGameData.js";
 import snakeColors from "../Utils/snakeColors.js"
+import Room from "./Room.js";
 export default class Player {
     /**
      * @type {Room}

@@ -1,4 +1,5 @@
 import directionToVector from '../Utils/directionToVector.js';
+import Player from './Player.js';
 export default class PlayerGameData {
     /**
      * @type {Player}
