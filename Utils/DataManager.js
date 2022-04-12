@@ -45,7 +45,7 @@ function CreateNewRoom(room_ID, frame_time, grid_size) {
     if (frame_time < 75 || frame_time > 1000) return { error: true, errorMessage: "frame_time must be between 75 and 1000" };
     if (grid_size == null) return { error: true, errorMessage: "grid_size not specified" };
     if (isNaN(grid_size)) return { error: true, errorMessage: "grid_size is not a number" };
-    if (grid_size < 8 || grid_size > 40) return { error: true, errorMessage: "grid_size must be between 8 and 40" };
+    if (grid_size < 6 || grid_size > 35) return { error: true, errorMessage: "grid_size must be between 8 and 40" };
 
     const newRoom = new Room(room_ID, frame_time, grid_size);
     newRoom.StartAfkTimeout();
