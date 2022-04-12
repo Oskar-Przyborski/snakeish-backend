@@ -7,7 +7,7 @@ export default class PlayerGameData {
     */
     player;
     name = "anonymous";
-    snake = [{ x: 0, y: 0 }];
+    snake = [];
     score = 0;
     color = "#5cd67f"
     direction = "right";
@@ -75,9 +75,13 @@ export default class PlayerGameData {
         return false
     }
     Reset() {
-        const x = Math.floor(Math.random() * this.player.room.grid_size);
-        const y = Math.floor(Math.random() * this.player.room.grid_size);
-        this.snake = [{ x, y }];
+        const availablePositions = this.player.room.GetAvailableCellsOnGrid();
+        console.log(availablePositions)
+        if (availablePositions.length > 0) {
+            const randomIndex = Math.floor(Math.random() * availablePositions.length);
+            const randomPosition = availablePositions[randomIndex];
+            this.snake = [{ x: randomPosition.x, y: randomPosition.y }];
+        }
         this.score = 0;
         this.direction = "right";
         this.targetDirection = "right";

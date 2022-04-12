@@ -29,8 +29,8 @@ export default class Player {
         if (colorIDX == null) { callback(true, "color not specified"); return; }
         if (colorIDX < 0 || colorIDX > 6) { callback(true, "color is out of range"); return; }
         if (this.isPlaying) { callback(true, "already playing"); return; }
-        this.isPlaying = true;
         this.gameData = new PlayerGameData(this, name, snakeColors[colorIDX]);
+        this.isPlaying = true;
         callback(false, null)
     }
     LeaveGame() {
