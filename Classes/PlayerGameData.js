@@ -1,4 +1,5 @@
 import directionToVector from '../Utils/directionToVector.js';
+import Apple from './Apple.js';
 import Player from './Player.js';
 export default class PlayerGameData {
     /**
@@ -17,17 +18,23 @@ export default class PlayerGameData {
         this.color = color;
         this.Reset()
     }
-    EatApple() {
+    /**
+     * Description
+     * @param {Apple} apple
+     * @returns {any}
+     */
+    EatApple(apple) {
+        if (apple == null) return;
         this.score++;
+        apple.shouldBeRespawned = true;
         this.snake.push({
             x: this.snake[this.snake.length - 1].x,
             y: this.snake[this.snake.length - 1].y
         });
-        this.player.room.RespawnApple();
     }
     MoveSnake() {
         this.direction = this.targetDirection;
-        if (this.CheckNextMoveApplePosition()) this.EatApple();
+        this.EatApple(this.CheckNextMoveApple());
         const head = this.snake[0];
         const newHead = {
             x: head.x + directionToVector(this.direction).x,
@@ -37,12 +44,19 @@ export default class PlayerGameData {
         this.snake.pop();
         if (this.CheckWallCollision() || this.CheckTailCollision()) { this.Reset(); return }
     }
-    CheckNextMoveApplePosition() {
+    CheckNextMoveApple() {
         const head = this.snake[0];
-        if (head.x + directionToVector(this.direction).x === this.player.room.apple.x && head.y + directionToVector(this.direction).y === this.player.room.apple.y) {
-            return true
+        const nextHeadMove = {
+            x: head.x + directionToVector(this.direction).x,
+            y: head.y + directionToVector(this.direction).y
+        };
+        for (let i = 0; i < this.player.room.apples.length; i++) {
+            const apple = this.player.room.apples[i];
+            if (apple.x === nextHeadMove.x && apple.y === nextHeadMove.y) {
+                return apple;
+            }
         }
-        return false
+        return null;
     }
     CheckTailCollision() {
         const head = this.snake[0];

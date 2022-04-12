@@ -1,25 +1,35 @@
 import Player from './Player.js';
 import io_rooms from '../app.js';
 import DataManager from '../Utils/DataManager.js';
+import Apple from './Apple.js';
 export default class Room {
     room_ID;
     /**
      * @type {Array<Player>}
      */
     players = [];
-    apple = {
-        x: 0,
-        y: 0
-    };
+    /** 
+     * @type {Array<Apple>}
+     */
+    apples = [];
     frame_time = 500;
     grid_size = 20;
     timeout;
     afkTimeout;
-    constructor(room_ID, frame_time, grid_size) {
+    /**
+     * Description
+     * @param {string} room_ID
+     * @param {number} frame_time
+     * @param {number} grid_size
+     * @param {number} apples_quantity
+     */
+    constructor(room_ID, frame_time, grid_size, apples_quantity) {
         this.room_ID = room_ID;
         this.frame_time = frame_time;
         this.grid_size = grid_size;
-        this.RespawnApple();
+        for (let i = 0; i < apples_quantity; i++) {
+            this.apples.push(new Apple(this));
+        }
         this.timeout = setTimeout(() => this.UpdateGame(), this.frame_time);
     }
     get isEmpty() {
@@ -28,7 +38,7 @@ export default class Room {
     ToJSON() {
         const data = {
             room_ID: this.room_ID,
-            apple: this.apple,
+            apples: this.apples.map(apple => apple.ToJSON()),
             players: this.GetPlayersInGameJSON(),
             frame_time: this.frame_time,
             grid_size: this.grid_size
@@ -64,7 +74,7 @@ export default class Room {
             if (this.isEmpty) DataManager.Rooms.RemoveRoom(this)
         }, 1000 * 60);
     }
-    StopAfkTimeout(){
+    StopAfkTimeout() {
         clearTimeout(this.afkTimeout);
     }
     GetPlayers() {
@@ -82,20 +92,38 @@ export default class Room {
 
     UpdateGame() {
         this.GetPlayersInGame().forEach(player => player.gameData.MoveSnake());
+        this.RespawnApples();
         const data = {}
         data.players = this.GetPlayersInGameJSON();
-        data.apple = this.apple;
+        data.apples = this.apples.map(apple => apple.ToJSON());
         data.GRID_SIZE = this.grid_size;
         io_rooms.to(this.room_ID).emit('game-update', data);
         this.timeout = setTimeout(() => this.UpdateGame(), this.frame_time);
     }
-    RespawnApple() {
-        do {
-            this.apple.x = Math.floor(Math.random() * this.grid_size);
-            this.apple.y = Math.floor(Math.random() * this.grid_size);
-        } while (this.GetPlayersInGame().some(player => player.gameData.snake.some(segment => segment.x === this.apple.x && segment.y === this.apple.y)));
-    }
     IsNameAlreadyTaken(name) {
         return this.GetPlayersInGame().some(player => player.gameData.name === name);
+    }
+    GetAvailableCellsOnGrid() {
+        const takenCells = this.GetPlayersInGame().reduce((cells, player) => {
+            return cells.concat(player.gameData.snake);
+        }, []);
+        this.apples.forEach(apple => takenCells.push({ x: apple.x, y: apple.y }));
+        const availableCells = [];
+        for (let x = 0; x < this.grid_size; x++) {
+            for (let y = 0; y < this.grid_size; y++) {
+                if (!takenCells.some(cell => cell.x === x && cell.y === y)) {
+                    availableCells.push({ x, y });
+                }
+            }
+        }
+        return availableCells;
+    }
+    RespawnApples() {
+        for (let i = 0; i < this.apples.length; i++) {
+            const apple = this.apples[i];
+            if (apple.shouldBeRespawned) {
+                apple.Respawn();
+            }
+        }
     }
 }

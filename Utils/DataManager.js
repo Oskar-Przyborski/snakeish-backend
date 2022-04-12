@@ -31,11 +31,12 @@ function GetRoomsJSON() {
 /**
  * Description
  * @param {String} room_ID
- * @param {String} frame_time
- * @param {String} grid_size
+ * @param {number} frame_time
+ * @param {number} grid_size
+ * @param {number} apples_quantity
  * @returns {Boolean}
  */
-function CreateNewRoom(room_ID, frame_time, grid_size) {
+function CreateNewRoom(room_ID, frame_time, grid_size, apples_quantity) {
     if (room_ID == null) return { error: true, errorMessage: "room_ID not specified" };
     if (room_ID == "") return { error: true, errorMessage: "room_ID is empty" };
     if (room_ID.length > 10) return { error: true, errorMessage: "room_ID is too long" };
@@ -46,8 +47,11 @@ function CreateNewRoom(room_ID, frame_time, grid_size) {
     if (grid_size == null) return { error: true, errorMessage: "grid_size not specified" };
     if (isNaN(grid_size)) return { error: true, errorMessage: "grid_size is not a number" };
     if (grid_size < 6 || grid_size > 35) return { error: true, errorMessage: "grid_size must be between 8 and 40" };
+    if (apples_quantity == null) return { error: true, errorMessage: "apples_quantity not specified" };
+    if (isNaN(apples_quantity)) return { error: true, errorMessage: "apples_quantity is not a number" };
+    if (apples_quantity < 1 || apples_quantity > 10) return { error: true, errorMessage: "apples_quantity must be between 1 and 10" };
 
-    const newRoom = new Room(room_ID, frame_time, grid_size);
+    const newRoom = new Room(room_ID, frame_time, grid_size,apples_quantity);
     newRoom.StartAfkTimeout();
     rooms.push(newRoom);
     return { error: false };
