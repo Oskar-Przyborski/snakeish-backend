@@ -36,7 +36,7 @@ function GetRoomsJSON() {
  * @param {number} apples_quantity
  * @returns {Boolean}
  */
-function CreateNewRoom(room_ID, frame_time, grid_size, apples_quantity) {
+function CreateNewRoom(room_ID, frame_time, grid_size, apples_quantity, collide_with_enemies) {
     if (room_ID == null) return { error: true, errorMessage: "room_ID not specified" };
     if (room_ID == "") return { error: true, errorMessage: "room_ID is empty" };
     if (room_ID.length > 10) return { error: true, errorMessage: "room_ID is too long" };
@@ -50,8 +50,10 @@ function CreateNewRoom(room_ID, frame_time, grid_size, apples_quantity) {
     if (apples_quantity == null) return { error: true, errorMessage: "apples_quantity not specified" };
     if (isNaN(apples_quantity)) return { error: true, errorMessage: "apples_quantity is not a number" };
     if (apples_quantity < 1 || apples_quantity > 10) return { error: true, errorMessage: "apples_quantity must be between 1 and 10" };
+    if (collide_with_enemies == null) return { error: true, errorMessage: "collide_with_enemies not specified" };
+    if (typeof collide_with_enemies !== "boolean") return { error: true, errorMessage: "collide_with_enemies is not a boolean" };
 
-    const newRoom = new Room(room_ID, frame_time, grid_size,apples_quantity);
+    const newRoom = new Room(room_ID, frame_time, grid_size, apples_quantity, collide_with_enemies);
     newRoom.StartAfkTimeout();
     rooms.push(newRoom);
     return { error: false };

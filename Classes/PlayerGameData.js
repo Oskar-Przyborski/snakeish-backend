@@ -12,11 +12,12 @@ export default class PlayerGameData {
     color = "#5cd67f"
     direction = "right";
     targetDirection = "right";
+    shouldBeRespawned = false
     constructor(player, name, color) {
         this.player = player;
         this.name = name;
         this.color = color;
-        this.Reset()
+        this.Respawn()
     }
     /**
      * Description
@@ -42,7 +43,8 @@ export default class PlayerGameData {
         };
         this.snake.unshift(newHead);
         this.snake.pop();
-        if (this.CheckWallCollision() || this.CheckTailCollision()) { this.Reset(); return }
+        if (this.CheckWallCollision() || this.CheckTailCollision()) this.shouldBeRespawned = true;
+        if (this.player.room.collideWithEnemies && this.CheckOtherPlayersCollision()) this.shouldBeRespawned = true;
     }
     CheckNextMoveApple() {
         const head = this.snake[0];
@@ -67,6 +69,20 @@ export default class PlayerGameData {
         }
         return false;
     }
+    CheckOtherPlayersCollision() {
+        const head = this.snake[0];
+        for (let i = 0; i < this.player.room.GetPlayersInGame().length; i++) {
+            const otherPlayer = this.player.room.players[i];
+            if (otherPlayer.gameData == this) continue;
+            for (let j = 0; j < otherPlayer.gameData.snake.length; j++) {
+                const otherPlayerSnakeCell = otherPlayer.gameData.snake[j];
+                if (otherPlayerSnakeCell.x == head.x && otherPlayerSnakeCell.y == head.y) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
     CheckWallCollision() {
         const head = this.snake[0];
         if (head.x < 0 || head.x >= this.player.room.grid_size || head.y < 0 || head.y >= this.player.room.grid_size) {
@@ -74,17 +90,17 @@ export default class PlayerGameData {
         }
         return false
     }
-    Reset() {
+    Respawn() {
+        this.score = 0;
+        this.direction = "right";
+        this.targetDirection = "right";
         const availablePositions = this.player.room.GetAvailableCellsOnGrid();
-        console.log(availablePositions)
         if (availablePositions.length > 0) {
             const randomIndex = Math.floor(Math.random() * availablePositions.length);
             const randomPosition = availablePositions[randomIndex];
             this.snake = [{ x: randomPosition.x, y: randomPosition.y }];
+            this.shouldBeRespawned = false;
         }
-        this.score = 0;
-        this.direction = "right";
-        this.targetDirection = "right";
     }
 
     /**

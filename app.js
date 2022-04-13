@@ -3,6 +3,7 @@ import express from "express";
 import { Server } from "socket.io";
 import DataManager from "./Utils/DataManager.js";
 import cors from "cors";
+import Room from "./Classes/Room.js";
 
 const corsData = {
     origin: "*",
@@ -19,6 +20,9 @@ const io = new Server(httpServer, {
 
 const io_rooms = io.of("/rooms")
 io_rooms.on('connection', socket => {
+    /**
+     * @type {Room}
+     */
     let room = null;
     socket.on("join-room", (roomId) => {
         console.log(`${socket.id} joining room ${roomId}`);
@@ -95,8 +99,8 @@ app.post("/api/create-room", (req, res) => {
     const frame_time = req.body.frame_time;
     const grid_size = req.body.grid_size;
     const apples_quantity = req.body.apples_quantity;
-    
-    const resp = DataManager.Rooms.CreateNewRoom(room_ID, frame_time, grid_size, apples_quantity);
+    const collide_with_enemies = req.body.collide_with_enemies;
+    const resp = DataManager.Rooms.CreateNewRoom(room_ID, frame_time, grid_size, apples_quantity,collide_with_enemies);
     if (resp.error) res.status(400).send(resp.errorMessage);
     else res.status(200).send("Room created");
 })

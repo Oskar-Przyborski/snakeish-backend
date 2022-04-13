@@ -14,6 +14,7 @@ export default class Room {
     apples = [];
     frame_time = 500;
     grid_size = 20;
+    collideWithEnemies = false;
     timeout;
     afkTimeout;
     /**
@@ -23,10 +24,11 @@ export default class Room {
      * @param {number} grid_size
      * @param {number} apples_quantity
      */
-    constructor(room_ID, frame_time, grid_size, apples_quantity) {
+    constructor(room_ID, frame_time, grid_size, apples_quantity, collideWithEnemies) {
         this.room_ID = room_ID;
         this.frame_time = frame_time;
         this.grid_size = grid_size;
+        this.collideWithEnemies = collideWithEnemies;
         for (let i = 0; i < apples_quantity; i++) {
             this.apples.push(new Apple(this));
         }
@@ -51,6 +53,11 @@ export default class Room {
         this.StopAfkTimeout()
         return player;
     }
+    /**
+     * Description
+     * @param {string} socket_ID
+     * @returns {Player | null}
+     * */
     FindPlayer(socket_ID) {
         for (let i = 0; i < this.players.length; i++) {
             if (this.players[i].socket.id === socket_ID) {
@@ -92,6 +99,7 @@ export default class Room {
 
     UpdateGame() {
         this.GetPlayersInGame().forEach(player => player.gameData.MoveSnake());
+        this.RespawnSnakes();
         this.RespawnApples();
         const data = {}
         data.players = this.GetPlayersInGameJSON();
@@ -123,6 +131,15 @@ export default class Room {
             const apple = this.apples[i];
             if (apple.shouldBeRespawned) {
                 apple.Respawn();
+            }
+        }
+    }
+    RespawnSnakes() {
+        for (let i = 0; i < this.players.length; i++) {
+            const player = this.players[i];
+            if (player.isPlaying) {
+                if (player.gameData.shouldBeRespawned)
+                    player.gameData.Respawn();
             }
         }
     }
