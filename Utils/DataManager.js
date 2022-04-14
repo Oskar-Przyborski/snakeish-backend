@@ -1,3 +1,4 @@
+import ClassicMode from "../Classes/GameModes/ClassicMode.js";
 import Room from "../Classes/Room.js";
 
 /**
@@ -31,29 +32,28 @@ function GetRoomsJSON() {
 /**
  * Description
  * @param {String} room_ID
- * @param {number} frame_time
- * @param {number} grid_size
- * @param {number} apples_quantity
- * @returns {Boolean}
+ * @param {number} gameModeIndex
+ * @param {any} settings
+ * @returns {any}
  */
-function CreateNewRoom(room_ID, frame_time, grid_size, apples_quantity, collide_with_enemies) {
+function CreateNewRoom(room_ID, gameModeIndex, settings) {
     if (room_ID == null) return { error: true, errorMessage: "room_ID not specified" };
     if (room_ID == "") return { error: true, errorMessage: "room_ID is empty" };
     if (room_ID.length > 10) return { error: true, errorMessage: "room_ID is too long" };
-    if (FindRoomByID(room_ID) != null) return { error: true, errorMessage: "Room name already exists" };
-    if (frame_time == null) return { error: true, errorMessage: "frame_time not specified" };
-    if (isNaN(frame_time)) return { error: true, errorMessage: "frame_time is not a number" };
-    if (frame_time < 75 || frame_time > 1000) return { error: true, errorMessage: "frame_time must be between 75 and 1000" };
-    if (grid_size == null) return { error: true, errorMessage: "grid_size not specified" };
-    if (isNaN(grid_size)) return { error: true, errorMessage: "grid_size is not a number" };
-    if (grid_size < 6 || grid_size > 35) return { error: true, errorMessage: "grid_size must be between 8 and 40" };
-    if (apples_quantity == null) return { error: true, errorMessage: "apples_quantity not specified" };
-    if (isNaN(apples_quantity)) return { error: true, errorMessage: "apples_quantity is not a number" };
-    if (apples_quantity < 1 || apples_quantity > 10) return { error: true, errorMessage: "apples_quantity must be between 1 and 10" };
-    if (collide_with_enemies == null) return { error: true, errorMessage: "collide_with_enemies not specified" };
-    if (typeof collide_with_enemies !== "boolean") return { error: true, errorMessage: "collide_with_enemies is not a boolean" };
-
-    const newRoom = new Room(room_ID, frame_time, grid_size, apples_quantity, collide_with_enemies);
+    if (FindRoomByID(room_ID) != null) return { error: true, errorMessage: "room_ID already exists" };
+    if (gameModeIndex == null) return { error: true, errorMessage: "gameModeIndex not specified" };
+    if (isNaN(gameModeIndex)) return { error: true, errorMessage: "gameModeIndex is not a number" };
+    if (settings == null) return { error: true, errorMessage: "settings not specified" };
+    switch (gameModeIndex) {
+        case 0:
+            const res = ClassicMode.CheckRequirements(settings);
+            if (res.error) return res;
+            break;
+        default:
+            return { error: true, errorMessage: "gameModeIndex is not valid" };
+            break;
+    }
+    const newRoom = new Room(room_ID, gameModeIndex, settings);
     newRoom.StartAfkTimeout();
     rooms.push(newRoom);
     return { error: false };
