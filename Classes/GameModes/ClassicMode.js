@@ -30,10 +30,12 @@ export default class ClassicMode extends GameMode {
             this.RespawnApple(newApple);
             this.apples.push(newApple);
         }
+        clearTimeout(this.updateTimeout);
         this.updateTimeout = setTimeout(() => this.GameUpdate(), this.frame_time);
     }
     GameUpdate() {
         const playersInGame = this.room.GetPlayersInGame();
+        console.log(this.room.GetPlayers().length);
         //eat apples
         playersInGame.forEach(player => {
             player.gameData.direction = player.gameData.targetDirection;
@@ -65,6 +67,7 @@ export default class ClassicMode extends GameMode {
             if (apple.isEaten) this.RespawnApple(apple);
         })
         this.BroadcastGameUpdate();
+        clearTimeout(this.updateTimeout);
         this.updateTimeout = setTimeout(() => this.GameUpdate(), this.frame_time);
     }
     BroadcastGameUpdate() {
@@ -77,6 +80,8 @@ export default class ClassicMode extends GameMode {
     }
     ToJSON() {
         return {
+            modeName: "classic",
+            modeIdx: 0,
             apples: this.apples.map(apple => apple.ToJSON()),
             GRID_SIZE: this.grid_size,
             frame_time: this.frame_time,
