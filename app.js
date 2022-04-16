@@ -59,6 +59,7 @@ io_rooms.on('connection', socket => {
         if (!room) return;
         const player = room.FindPlayer(socket.id);
         if (!player) return;
+        player.LeaveGame();
         room.RemovePlayer(player);
         console.log(`${socket.id} disconnected from room ${room.room_ID}`);
 
@@ -96,11 +97,9 @@ app.post("/api/is-name-already-taken", (req, res) => {
 })
 app.post("/api/create-room", (req, res) => {
     const room_ID = req.body.room_ID;
-    const frame_time = req.body.frame_time;
-    const grid_size = req.body.grid_size;
-    const apples_quantity = req.body.apples_quantity;
-    const collide_with_enemies = req.body.collide_with_enemies;
-    const resp = DataManager.Rooms.CreateNewRoom(room_ID, frame_time, grid_size, apples_quantity,collide_with_enemies);
+    const gameModeIndex = req.body.gameModeIndex;
+    const settings = req.body.settings;
+    const resp = DataManager.Rooms.CreateNewRoom(room_ID, gameModeIndex, settings);
     if (resp.error) res.status(400).send(resp.errorMessage);
     else res.status(200).send("Room created");
 })
