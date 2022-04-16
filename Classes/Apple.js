@@ -3,6 +3,7 @@ import Room from "./Room.js";
 export default class Apple {
     x;
     y;
+    value = 1;
     isEaten = false;
     /**
      * @type {Room} room
@@ -12,10 +13,11 @@ export default class Apple {
      * Description
      * @param {Room} room
      * */
-    constructor(room) {
+    constructor(room, x, y, value = 1) {
         this.room = room;
-        this.x = 0;
-        this.y = 0;
+        this.x = x;
+        this.y = y;
+        this.value = value;
     }
     ToJSON() {
         const data = {

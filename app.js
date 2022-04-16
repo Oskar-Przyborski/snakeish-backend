@@ -59,6 +59,7 @@ io_rooms.on('connection', socket => {
         if (!room) return;
         const player = room.FindPlayer(socket.id);
         if (!player) return;
+        player.LeaveGame();
         room.RemovePlayer(player);
         console.log(`${socket.id} disconnected from room ${room.room_ID}`);
 

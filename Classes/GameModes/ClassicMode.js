@@ -3,6 +3,7 @@ import GameMode from "./GameMode.js";
 import Apple from "../Apple.js";
 import directionToVector from '../../Utils/directionToVector.js';
 import io_rooms from '../../app.js'
+import PlayerGameDataClassic from "../PlayerGameDataClassic.js";
 export default class ClassicMode extends GameMode {
     /**
      * @type {Apple[]}
@@ -16,6 +17,9 @@ export default class ClassicMode extends GameMode {
         if (settings.apples_quantity == null) return { error: true, errorMessage: "apples_quantity is not specified" };
         if (settings.collide_with_enemies == null) return { error: true, errorMessage: "collide_with_enemies is not specified" };
         return { error: false };
+    }
+    CreatePlayerData(player, name, color){
+        return new PlayerGameDataClassic(player, name, color);
     }
     constructor(room, settings) {
         super(room, settings);
@@ -35,7 +39,6 @@ export default class ClassicMode extends GameMode {
     }
     GameUpdate() {
         const playersInGame = this.room.GetPlayersInGame();
-        console.log(this.room.GetPlayers().length);
         //eat apples
         playersInGame.forEach(player => {
             player.gameData.direction = player.gameData.targetDirection;
@@ -74,7 +77,7 @@ export default class ClassicMode extends GameMode {
         const data = {
             players: this.room.GetPlayersInGameJSON(),
             apples: this.apples.map(apple => apple.ToJSON()),
-            GRID_SIZE: this.grid_size
+            grid_size: this.grid_size
         }
         io_rooms.in(this.room.room_ID).emit('game-update', data);
     }
@@ -111,6 +114,8 @@ export default class ClassicMode extends GameMode {
      */
     OnPlayerJoin(player) {
         this.RespawnPlayer(player);
+    }
+    OnPlayerLeave(player) {
     }
     /**
      * Description

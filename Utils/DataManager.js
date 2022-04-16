@@ -1,3 +1,4 @@
+import BattleRoyale from "../Classes/GameModes/BattleRoyale.js";
 import ClassicMode from "../Classes/GameModes/ClassicMode.js";
 import Room from "../Classes/Room.js";
 
@@ -46,12 +47,15 @@ function CreateNewRoom(room_ID, gameModeIndex, settings) {
     if (settings == null) return { error: true, errorMessage: "settings not specified" };
     switch (gameModeIndex) {
         case 0:
-            const res = ClassicMode.CheckRequirements(settings);
-            if (res.error) return res;
+            const ClassicRes = ClassicMode.CheckRequirements(settings);
+            if (ClassicRes.error) return ClassicRes;
+            break;
+        case 1:
+            const RoyaleRes = BattleRoyale.CheckRequirements(settings);
+            if (RoyaleRes.error) return RoyaleRes;
             break;
         default:
             return { error: true, errorMessage: "gameModeIndex is not valid" };
-            break;
     }
     const newRoom = new Room(room_ID, gameModeIndex, settings);
     newRoom.StartAfkTimeout();

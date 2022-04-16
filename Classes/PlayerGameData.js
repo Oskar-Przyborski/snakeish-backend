@@ -10,7 +10,6 @@ export default class PlayerGameData {
     color = "#5cd67f"
     direction = "right";
     targetDirection = "right";
-    shouldBeRespawned = false
     constructor(player, name, color) {
         this.player = player;
         this.name = name;

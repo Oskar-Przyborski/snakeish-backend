@@ -29,13 +29,14 @@ export default class Player {
         if (colorIDX == null) { callback(true, "color not specified"); return; }
         if (colorIDX < 0 || colorIDX > 6) { callback(true, "color is out of range"); return; }
         if (this.isPlaying) { callback(true, "already playing"); return; }
-        this.gameData = new PlayerGameData(this, name, snakeColors[colorIDX]);
-        this.room.gameMode.OnPlayerJoin(this);
+        this.gameData = this.room.gameMode.CreatePlayerData(this, name, snakeColors[colorIDX]);
         this.isPlaying = true;
+        this.room.gameMode.OnPlayerJoin(this);
         callback(false, null)
     }
     LeaveGame() {
         this.isPlaying = false;
+        this.room.gameMode.OnPlayerLeave(this);
         this.gameData = null;
     }
     ToJSON() {

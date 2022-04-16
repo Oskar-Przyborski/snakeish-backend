@@ -3,6 +3,7 @@ import DataManager from '../Utils/DataManager.js';
 import Apple from './Apple.js';
 import GameMode from './GameModes/GameMode.js';
 import ClassicMode from './GameModes/ClassicMode.js';
+import BattleRoyale from './GameModes/BattleRoyale.js';
 export default class Room {
     room_ID;
     /**
@@ -29,6 +30,9 @@ export default class Room {
             case 0:
             default:
                 this.gameMode = new ClassicMode(this, settings);
+                break;
+            case 1:
+                this.gameMode = new BattleRoyale(this, settings);
                 break;
         }
     }
@@ -62,6 +66,9 @@ export default class Room {
         }
         return null;
     }
+    /**
+     * @param {Player} player 
+     */
     RemovePlayer(player) {
         if (player != null) {
             this.players.splice(this.players.indexOf(player), 1);
