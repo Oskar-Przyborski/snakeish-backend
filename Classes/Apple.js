@@ -23,7 +23,8 @@ export default class Apple {
         const data = {
             isEaten: this.isEaten,
             x: this.isEaten ? -1 : this.x,
-            y: this.isEaten ? -1 : this.y
+            y: this.isEaten ? -1 : this.y,
+            value: this.value
         }
         return data;
     }

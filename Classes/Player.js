@@ -29,6 +29,7 @@ export default class Player {
         if (colorIDX == null) { callback(true, "color not specified"); return; }
         if (colorIDX < 0 || colorIDX > 6) { callback(true, "color is out of range"); return; }
         if (this.isPlaying) { callback(true, "already playing"); return; }
+        if (!this.room.gameMode.CanJoinGame(this)) { callback(true, "cannot join game"); return; }
         this.gameData = this.room.gameMode.CreatePlayerData(this, name, snakeColors[colorIDX]);
         this.isPlaying = true;
         this.room.gameMode.OnPlayerJoin(this);

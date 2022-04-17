@@ -107,6 +107,9 @@ export default class ClassicMode extends GameMode {
         return availableCells;
     }
 
+    CanJoinGame(player){
+        return true;
+    }
     /**
      * Description
      * @param {Player} player

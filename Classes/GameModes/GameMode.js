@@ -12,6 +12,7 @@ export default class GameMode {
     OnPlayerJoin(player) { throw new Error("GameMode.OnPlayerJoin: Not implemented."); }
     OnPlayerLeave(player) { throw new Error("GameMode.OnPlayerLeave: Not implemented."); }
     CreatePlayerData(player, name, color) { throw new Error("GameMode.CreatePlayerData: Not implemented."); }
+    CanJoinGame(player) {throw new Error("GameMode.CanJoinGame: Not implemented.");}
     constructor(room, settings) {
         this.room = room;
         this.frame_time = settings.frame_time;

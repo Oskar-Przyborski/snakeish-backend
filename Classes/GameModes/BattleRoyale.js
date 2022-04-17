@@ -1,4 +1,5 @@
 import io_rooms from "../../app.js";
+import Countdown from "../../Utils/Countdown.js";
 import directionToVector from "../../Utils/directionToVector.js";
 import Apple from "../Apple.js";
 import Player from "../Player.js";
@@ -19,14 +20,16 @@ export default class BattleRoyale extends GameMode {
          */
         winner: null
     }
-    waitingForPlayersCountdown = -1;
-    waitingForPlayersTimeout = null;
-    restartCountdown = -1;
-    startFreezeCountdown = -1;
-    spawnAppleCountdown = -1;
+    WaitingForPlayersCountdown = new Countdown(5, false, () => this.StartGame());
+    RestartCountdown = new Countdown(5, false, () => this.RestartGame());
+    FreezeCountdown = new Countdown(3, false, () => this.isFreezed = false);
+    isFreezed = true;
+    SpawnAppleCountdown = new Countdown(4, false, () => this.SpawnNewApple());
     updateTimeout;
     mapShrinkSize = 0;
-    mapShrinkCountdown = -1;
+    MapShrinkCountdown = new Countdown(10, false, () => this.ShrinkMap())
+    GoldAppleCountdown = new Countdown(10, false, () => this.SpawnGoldApple());
+    KillShortestCountdown = new Countdown(5, false, () => this.KillShortestSnake());
     static CheckRequirements(settings) {
         if (settings.min_players == null) return { error: true, errorMessage: "min_players is not specified" };
         return { error: false };
@@ -42,31 +45,6 @@ export default class BattleRoyale extends GameMode {
         clearTimeout(this.updateTimeout)
         this.updateTimeout = setTimeout(() => this.GameUpdate(), this.frame_time);
     }
-    StartWaitingForPlayersCountdown() {
-        this.StopWaitingForPlayersCountdown()
-        this.waitingForPlayersCountdown = 10;
-        this.waitingForPlayersTimeout = setInterval(() => {
-            this.waitingForPlayersCountdown--;
-            if (this.waitingForPlayersCountdown < 0) {
-                clearInterval(this.waitingForPlayersTimeout);
-                this.StartGame();
-            }
-        }, 1000);
-    }
-    StopWaitingForPlayersCountdown() {
-        clearInterval(this.waitingForPlayersTimeout);
-        this.waitingForPlayersCountdown = -1;
-    }
-    StartRestartCountdown() {
-        this.restartCountdown = 5;
-        const interval = setInterval(() => {
-            this.restartCountdown--;
-            if (this.restartCountdown < 0) {
-                this.RestartGame();
-                clearInterval(interval);
-            }
-        }, 1000);
-    }
     RestartGame() {
         this.game_status.started = false;
         this.game_status.ended = false;
@@ -75,42 +53,46 @@ export default class BattleRoyale extends GameMode {
         this.apples = [];
         clearTimeout(this.updateTimeout);
         this.updateTimeout = setTimeout(() => this.GameUpdate(), this.frame_time);
-        this.room.GetPlayersInGame().forEach(player => {
-            player.gameData.isKilled = false;
-            player.gameData.snake = [];
-            player.gameData.score = 0;
-        });
+        this.room.GetPlayersInGame().forEach(player => player.gameData.Reset());
+        this.SpawnAppleCountdown.StopCountdown();
+        this.MapShrinkCountdown.StopCountdown();
+        this.WaitingForPlayersCountdown.StopCountdown();
+        this.GoldAppleCountdown.StopCountdown();
+        this.RestartCountdown.StopCountdown();
         if (this.room.GetPlayersInGame().length >= this.min_players) {
-            this.StartWaitingForPlayersCountdown();
+            this.WaitingForPlayersCountdown.RestartCountdown();
         }
     }
     StartGame() {
         this.game_status.started = true;
+        this.game_status.ended = false;
+        this.game_status.winner = null;
+        this.grid_size = 6 * this.room.GetPlayersInGame().length;
         this.SpawnPlayers();
-        this.startFreezeCountdown = 10;
         for (let i = 0; i < this.min_players * 2; i++) {
             this.SpawnNewApple();
         }
-        this.spawnAppleCountdown = 10;
-        this.shrinkMapCountdown = 15;
+        this.isFreezed = true;
+        this.FreezeCountdown.RestartCountdown();
+        this.SpawnAppleCountdown.SetDefaultTime(4 / this.GetAlivePlayers().length);
+        this.SpawnAppleCountdown.RestartCountdown();
+        this.MapShrinkCountdown.RestartCountdown();
+        this.GoldAppleCountdown.RestartCountdown();
+        clearTimeout(this.updateTimeout);
+        this.updateTimeout = setTimeout(() => this.GameUpdate(), this.frame_time);
     }
     GameUpdate() {
-        if (this.game_status.started && !this.game_status.ended) {
-            if (this.startFreezeCountdown >= 0)
-                this.startFreezeCountdown--;
-            else {
-                this.ElapseAppleCountdown();
-                this.ElapseMapShrinkCountdown();
-                this.GetAlivePlayers().forEach(player => {
-                    player.gameData.direction = player.gameData.targetDirection;
-                    this.EatAppleInNextMove(player)
-                });
-                this.GetAlivePlayers().forEach(player => this.MovePlayer(player))
-                this.GetAlivePlayers().forEach(player => {
-                    if (this.CheckPlayerBodyCollision(player) || this.CheckPlayerOutsideMap(player)) this.KillPlayer(player);
-                    else this.KillPlayerIfCollidingWithEnemy(player);
-                })
-            }
+        if (this.game_status.started && !this.game_status.ended && !this.isFreezed) {
+            this.GetAlivePlayers().forEach(player => {
+                player.gameData.direction = player.gameData.targetDirection;
+                this.EatAppleInNextMove(player)
+            });
+            this.GetAlivePlayers().forEach(player => this.MovePlayer(player))
+            this.GetAlivePlayers().forEach(player => {
+                if (this.CheckPlayerBodyCollision(player) || this.CheckPlayerOutsideMap(player)) player.gameData.shouldBeKilled = true;
+                else this.KillPlayerIfCollidingWithEnemy(player);
+            })
+            this.KillPlayersThatShouldBeKilled();
         }
         this.BroadcastGameUpdate();
         clearTimeout(this.updateTimeout);
@@ -122,7 +104,7 @@ export default class BattleRoyale extends GameMode {
         data.min_players = this.min_players;
         if (!this.game_status.started) {
             data.waiting_players = this.room.GetPlayersInGame().length;
-            data.countdown = this.waitingForPlayersCountdown;
+            data.countdown = this.WaitingForPlayersCountdown.isRunning ? this.WaitingForPlayersCountdown.timeLeft : -1;
             data.players = this.room.GetPlayersInGameJSON();
         }
         else if (this.game_status.started && !this.game_status.ended) {
@@ -130,10 +112,13 @@ export default class BattleRoyale extends GameMode {
             data.players = this.room.GetPlayersInGameJSON()
             data.grid_size = this.grid_size;
             data.shrink_size = this.mapShrinkSize;
+            data.freeze_time = this.FreezeCountdown.isRunning ? this.FreezeCountdown.timeLeft : -1;
+            data.shrink_time = this.MapShrinkCountdown.isRunning ? this.MapShrinkCountdown.timeLeft : -1;
+            data.kill_shortest_time = this.KillShortestCountdown.isRunning ? this.KillShortestCountdown.timeLeft : -1;
         } else if (this.game_status.ended) {
             if (this.game_status.winner) data.winner = this.game_status.winner.gameData.name
             else data.winner = "No one"
-            data.restart_countdown = this.restartCountdown;
+            data.restart_countdown = this.RestartCountdown.timeLeft;
             data.players = this.room.GetPlayersInGameJSON();
         }
         io_rooms.to(this.room.room_ID).emit("game-update", data);
@@ -148,10 +133,17 @@ export default class BattleRoyale extends GameMode {
             frame_time: this.frame_time
         }
     }
+    CanJoinGame(player) {
+        //if game started return false
+        if (this.game_status.started) return false;
+        //if player is already in game return false
+        if (this.room.GetPlayersInGame().find(p => p.socket.id == player.socket.id)) return false;
+        return true;
+    }
     OnPlayerJoin(player) {
         if (!this.game_status.started) {
             if (this.room.GetPlayersInGame().length >= this.min_players) {
-                this.StartWaitingForPlayersCountdown();
+                this.WaitingForPlayersCountdown.RestartCountdown();
             }
         }
         else {
@@ -162,10 +154,14 @@ export default class BattleRoyale extends GameMode {
     }
     OnPlayerLeave(player) {
         if (this.game_status.started) {
-            this.KillPlayer(player);
+            if (player.gameData) {
+                player.gameData.shouldBeKilled = true;
+                if (this.GetAlivePlayers().length == 0)
+                    this.RestartGame();
+            }
         } else if (!this.game_status.ended) {
             if (this.room.GetPlayersInGame().length < this.min_players) {
-                this.StopWaitingForPlayersCountdown();
+                this.WaitingForPlayersCountdown.StopCountdown();
             }
         }
     }
@@ -188,7 +184,7 @@ export default class BattleRoyale extends GameMode {
     SpawnPlayers() {
         const players = this.room.GetPlayersInGame();
         players.forEach(player => {
-            const availableCells = this.GetAvailableCells(3);
+            const availableCells = this.GetAvailableCells(2);
             const randomCell = availableCells[Math.floor(Math.random() * availableCells.length)];
             player.gameData.snake = [{ x: randomCell.x, y: randomCell.y }];
             player.gameData.direction = "right";
@@ -198,17 +194,17 @@ export default class BattleRoyale extends GameMode {
             player.gameData.isKilled = false;
         });
     }
-    /**
-     * Kills player
-     * @param {Player} player 
-     */
-    KillPlayer(player) {
-        if (player.gameData) {
-            player.gameData.isKilled = true;
-            player.gameData.snake = [];
-            player.gameData.score = 0;
-        }
-        this.CheckWinner();
+    KillPlayersThatShouldBeKilled() {
+        this.room.GetPlayersInGame().forEach(player => {
+            if (player.gameData.shouldBeKilled) {
+                if (player.gameData) {
+                    player.gameData.isKilled = true;
+                    player.gameData.snake = [];
+                    player.gameData.score = 0;
+                }
+                this.CheckWinner();
+            }
+        })
     }
     CheckWinner() {
         if (this.GetAlivePlayers().length <= 1) {
@@ -217,8 +213,7 @@ export default class BattleRoyale extends GameMode {
                 this.game_status.winner = this.GetAlivePlayers()[0].ToJSON();
             else
                 this.game_status.winner = null;
-            this.StartRestartCountdown();
-            clearTimeout(this.waitingForPlayersTimeout);
+            this.RestartCountdown.RestartCountdown();
         }
     }
     /**
@@ -262,8 +257,8 @@ export default class BattleRoyale extends GameMode {
             const enemySnake = enemy.gameData.snake;
             for (let j = 0; j < enemySnake.length; j++) {
                 if (enemySnake[j].x === head.x && enemySnake[j].y === head.y) {
-                    if (j === 0) this.KillPlayer(enemy);
-                    else this.KillPlayer(player);
+                    if (j === 0) enemy.gameData.shouldBeKilled = true; //if head - kill enemy too
+                    else player.gameData.shouldBeKilled = true;
                     return;
                 }
             }
@@ -293,19 +288,13 @@ export default class BattleRoyale extends GameMode {
             this.apples = this.apples.filter(apple => apple !== eatenApple);
         }
     }
-    ElapseAppleCountdown() {
-        if (this.spawnAppleCountdown >= 0)
-            this.spawnAppleCountdown--;
-        else {
-            this.SpawnNewApple();
-            this.spawnAppleCountdown = 5;
-        }
-    }
     SpawnNewApple(value = 1) {
         const availableCells = this.GetAvailableCells();
+        if (availableCells.length === 0) return;
         const randomCell = availableCells[Math.floor(Math.random() * availableCells.length)];
         const apple = new Apple(this.room, randomCell.x, randomCell.y, value);
         this.apples.push(apple);
+        this.SpawnAppleCountdown.RestartCountdown();
     }
     ShrinkMap() {
         this.mapShrinkSize++;
@@ -317,7 +306,7 @@ export default class BattleRoyale extends GameMode {
                 const currElement = snake[i];
                 if (currElement.x < this.mapShrinkSize || currElement.x >= this.grid_size - this.mapShrinkSize || currElement.y < this.mapShrinkSize || currElement.y >= this.grid_size - this.mapShrinkSize) {
                     if (i === 0)
-                        this.KillPlayer(player);
+                        player.gameData.shouldBeKilled = true;
                     else {
                         player.gameData.snake = snake.slice(0, i);
                     }
@@ -330,13 +319,24 @@ export default class BattleRoyale extends GameMode {
                 this.apples = this.apples.filter(applefltr => apple !== applefltr);
             }
         })
+        this.KillShortestCountdown.RestartCountdown();
     }
-    ElapseMapShrinkCountdown() {
-        if (this.shrinkMapCountdown >= 0)
-            this.shrinkMapCountdown--;
-        else {
-            this.ShrinkMap();
-            this.shrinkMapCountdown = 15;
-        }
+    SpawnGoldApple() {
+        const availableCells = this.GetAvailableCells();
+        const randomCell = availableCells[Math.floor(Math.random() * availableCells.length)];
+        const apple = new Apple(this.room, randomCell.x, randomCell.y, 3);
+        this.apples.push(apple);
+        this.SpawnAppleCountdown.RestartCountdown();
+    }
+    KillShortestSnake() {
+        const players = this.room.GetPlayersInGame();
+        //sort players by its snakes lengths
+        players.sort((a, b) => a.gameData.snake.length - b.gameData.snake.length);
+        const shortestSnake = players[0].gameData.snake;
+        players.forEach(player => {
+            if (player.gameData.snake.length === shortestSnake.length) {
+                player.gameData.shouldBeKilled = true;
+            }
+        })
     }
 }
