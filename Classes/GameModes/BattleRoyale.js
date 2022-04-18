@@ -12,6 +12,7 @@ export default class BattleRoyale extends GameMode {
     */
     apples = [];
     min_players = 2;
+    deadZoneKills = false;
     game_status = {
         started: false,
         ended: false,
@@ -32,6 +33,7 @@ export default class BattleRoyale extends GameMode {
     KillShortestCountdown = new Countdown(5, false, () => this.KillShortestSnake());
     static CheckRequirements(settings) {
         if (settings.min_players == null) return { error: true, errorMessage: "min_players is not specified" };
+        if (settings.dead_zone_kills == null) return { error: true, errorMessage: "dead_zone_kills is not specified" };
         return { error: false };
     }
     CreatePlayerData(player, name, color) {
@@ -42,6 +44,7 @@ export default class BattleRoyale extends GameMode {
         settings.grid_size = 20
         super(room, settings);
         this.min_players = settings.min_players;
+        this.deadZoneKills = settings.dead_zone_kills;
         clearTimeout(this.updateTimeout)
         this.updateTimeout = setTimeout(() => this.GameUpdate(), this.frame_time);
     }
@@ -88,6 +91,11 @@ export default class BattleRoyale extends GameMode {
                 this.EatAppleInNextMove(player)
             });
             this.GetAlivePlayers().forEach(player => this.MovePlayer(player))
+            this.GetAlivePlayers().forEach(player => {
+                if (this.CheckPlayerInDeadZone(player)) {
+                    this.PlayerInDeadZone(player)
+                }
+            })
             this.GetAlivePlayers().forEach(player => {
                 if (this.CheckPlayerBodyCollision(player) || this.CheckPlayerOutsideMap(player)) player.gameData.shouldBeKilled = true;
                 else this.KillPlayerIfCollidingWithEnemy(player);
@@ -245,7 +253,9 @@ export default class BattleRoyale extends GameMode {
         const snake = player.gameData.snake;
         if (snake.length === 0) return false;
         const head = snake[0];
-        return head.x < this.mapShrinkSize || head.x >= this.grid_size - this.mapShrinkSize || head.y < this.mapShrinkSize || head.y >= this.grid_size - this.mapShrinkSize;
+        const topLeftBorder = this.deadZoneKills ? this.mapShrinkSize : 0;
+        const bottomRightBorder = this.deadZoneKills ? this.grid_size - this.mapShrinkSize : this.grid_size;
+        return head.x < topLeftBorder || head.x >= bottomRightBorder || head.y < topLeftBorder || head.y >= bottomRightBorder;
     }
     KillPlayerIfCollidingWithEnemy(player) {
         const playersInGame = this.GetAlivePlayers();
@@ -261,6 +271,24 @@ export default class BattleRoyale extends GameMode {
                     else player.gameData.shouldBeKilled = true;
                     return;
                 }
+            }
+        }
+    }
+    CheckPlayerInDeadZone(player) {
+        //if any part of snake is in dead zone return true
+        const snake = player.gameData.snake;
+        if (snake.length === 0) return false;
+        const topLeftBorder = this.mapShrinkSize
+        const bottomRightBorder = this.grid_size - this.mapShrinkSize
+        return snake.some(cell => cell.x < topLeftBorder || cell.x >= bottomRightBorder || cell.y < topLeftBorder || cell.y >= bottomRightBorder);
+    }
+    PlayerInDeadZone(player) {
+        player.gameData.deadZoneCounter++;
+        if (player.gameData.deadZoneCounter >= 3) {
+            player.gameData.deadZoneCounter = 0;
+            player.gameData.snake.pop();
+            if (player.gameData.snake.length === 0) {
+                player.gameData.shouldBeKilled = true;
             }
         }
     }
@@ -299,21 +327,22 @@ export default class BattleRoyale extends GameMode {
     ShrinkMap() {
         this.mapShrinkSize++;
         const players = this.room.GetPlayersInGame();
-        players.forEach(player => {
-            let snake = player.gameData.snake;
-            if (snake.length === 0) return;
-            for (let i = 0; i < snake.length; i++) {
-                const currElement = snake[i];
-                if (currElement.x < this.mapShrinkSize || currElement.x >= this.grid_size - this.mapShrinkSize || currElement.y < this.mapShrinkSize || currElement.y >= this.grid_size - this.mapShrinkSize) {
-                    if (i === 0)
-                        player.gameData.shouldBeKilled = true;
-                    else {
-                        player.gameData.snake = snake.slice(0, i);
+        if (this.deadZoneKills)
+            players.forEach(player => {
+                let snake = player.gameData.snake;
+                if (snake.length === 0) return;
+                for (let i = 0; i < snake.length; i++) {
+                    const currElement = snake[i];
+                    if (currElement.x < this.mapShrinkSize || currElement.x >= this.grid_size - this.mapShrinkSize || currElement.y < this.mapShrinkSize || currElement.y >= this.grid_size - this.mapShrinkSize) {
+                        if (i === 0)
+                            player.gameData.shouldBeKilled = true;
+                        else {
+                            player.gameData.snake = snake.slice(0, i);
+                        }
+                        break;
                     }
-                    break;
                 }
-            }
-        })
+            })
         this.apples.forEach(apple => {
             if (apple.x < this.mapShrinkSize || apple.x >= this.grid_size - this.mapShrinkSize || apple.y < this.mapShrinkSize || apple.y >= this.grid_size - this.mapShrinkSize) {
                 this.apples = this.apples.filter(applefltr => apple !== applefltr);
