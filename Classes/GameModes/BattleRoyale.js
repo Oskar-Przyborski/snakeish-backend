@@ -369,5 +369,6 @@ export default class BattleRoyale extends GameMode {
                     player.gameData.shouldBeKilled = true;
                 }
             })
+        this.MapShrinkCountdown.RestartCountdown()
     }
 }
