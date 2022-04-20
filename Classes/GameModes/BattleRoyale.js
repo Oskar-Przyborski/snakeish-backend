@@ -359,16 +359,18 @@ export default class BattleRoyale extends GameMode {
         this.SpawnAppleCountdown.RestartCountdown();
     }
     KillShortestSnake() {
-        const players = this.room.GetPlayersInGame();
-        //sort players by its snakes lengths
-        players.sort((a, b) => a.gameData.snake.length - b.gameData.snake.length);
-        const shortestSnake = players[0].gameData.snake;
-        if (!players.every(player => player.gameData.snake.length === shortestSnake.length))
-            players.forEach(player => {
-                if (player.gameData.snake.length === shortestSnake.length) {
-                    player.gameData.shouldBeKilled = true;
+        const alivePlayers = this.GetAlivePlayers();
+        alivePlayers.sort((a, b) => a.gameData.snake.length - b.gameData.snake.length);
+        const shortestSnake = alivePlayers[0];
+        if (!alivePlayers.every(snake => snake.gameData.snake.length == shortestSnake.gameData.snake.length)) {
+            for (let i = 0; i < alivePlayers.length; i++) {
+                if (alivePlayers[i].gameData.snake.length == shortestSnake.gameData.snake.length) {
+                    alivePlayers[i].gameData.shouldBeKilled = true
+                } else {
+                    break;
                 }
-            })
+            }
+        }
         this.MapShrinkCountdown.RestartCountdown()
     }
 }
