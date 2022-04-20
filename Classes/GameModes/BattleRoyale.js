@@ -11,9 +11,12 @@ export default class BattleRoyale extends GameMode {
     * @type {Apple[]}
     */
     apples = [];
-    min_players = 2;
-    deadZoneKills = false;
-    gameSpeedUpValue = 0.1;
+    gameSettings = {
+        min_players: 2,
+        deadZoneKills: false,
+        gameSpeedUpValue: 0.1,
+        gridSizePerPlayer: 8
+    }
     game_status = {
         started: false,
         ended: false,
@@ -41,6 +44,10 @@ export default class BattleRoyale extends GameMode {
         if (settings.game_speed_up_value == null) return { error: true, errorMessage: "game_speed_up_value is not specified" };
         if (isNaN(settings.game_speed_up_value)) return { error: true, errorMessage: "game_speed_up_value is not a number" };
         if (parseFloat(settings.game_speed_up_value) < 0 || parseFloat(settings.game_speed_up_value) > 0.3) return { error: true, errorMessage: "game_speed_up_value is not between 0 and 0.3" };
+        if (settings.grid_size_per_player == null) return { error: true, errorMessage: "grid_size_per_player is not specified" };
+        if (isNaN(settings.grid_size_per_player)) return { error: true, errorMessage: "grid_size_per_player is not a number" };
+        if (parseInt(settings.grid_size_per_player) < 6 || parseInt(settings.grid_size_per_player) > 12) return { error: true, errorMessage: "grid_size_per_player must be between 1 and 16" };
+
         return { error: false };
     }
     CreatePlayerData(player, name, color) {
@@ -50,9 +57,10 @@ export default class BattleRoyale extends GameMode {
         settings.frame_time = 250
         settings.grid_size = 20
         super(room, settings);
-        this.min_players = parseInt(settings.min_players);
-        this.deadZoneKills = settings.dead_zone_kills;
-        this.gameSpeedUpValue = parseFloat(settings.game_speed_up_value);
+        this.gameSettings.min_players = parseInt(settings.min_players);
+        this.gameSettings.deadZoneKills = settings.dead_zone_kills;
+        this.gameSettings.gameSpeedUpValue = parseFloat(settings.game_speed_up_value);
+        this.gameSettings.gridSizePerPlayer = parseInt(settings.grid_size_per_player);
         clearTimeout(this.updateTimeout)
         this.updateTimeout = setTimeout(() => this.GameUpdate(), this.frame_time);
     }
@@ -72,7 +80,7 @@ export default class BattleRoyale extends GameMode {
         this.GoldAppleCountdown.StopCountdown();
         this.RestartCountdown.StopCountdown();
         this.KillShortestCountdown.StopCountdown();
-        if (this.room.GetPlayersInGame().length >= this.min_players) {
+        if (this.room.GetPlayersInGame().length >= this.gameSettings.min_players) {
             this.WaitingForPlayersCountdown.RestartCountdown();
         }
     }
@@ -80,9 +88,9 @@ export default class BattleRoyale extends GameMode {
         this.game_status.started = true;
         this.game_status.ended = false;
         this.game_status.winner = null;
-        this.grid_size = 6 * this.room.GetPlayersInGame().length;
+        this.grid_size = this.gameSettings.gridSizePerPlayer * this.room.GetPlayersInGame().length;
         this.SpawnPlayers();
-        for (let i = 0; i < this.min_players * 2; i++) {
+        for (let i = 0; i < this.gameSettings.min_players * 2; i++) {
             this.SpawnNewApple();
         }
         this.isFreezed = true;
@@ -119,7 +127,7 @@ export default class BattleRoyale extends GameMode {
     BroadcastGameUpdate() {
         const data = {}
         data.game_status = this.game_status;
-        data.min_players = this.min_players;
+        data.min_players = this.gameSettings.min_players;
         if (!this.game_status.started) {
             data.waiting_players = this.room.GetPlayersInGame().length;
             data.countdown = this.WaitingForPlayersCountdown.isRunning ? this.WaitingForPlayersCountdown.timeLeft : -1;
@@ -160,7 +168,7 @@ export default class BattleRoyale extends GameMode {
     }
     OnPlayerJoin(player) {
         if (!this.game_status.started) {
-            if (this.room.GetPlayersInGame().length >= this.min_players) {
+            if (this.room.GetPlayersInGame().length >= this.gameSettings.min_players) {
                 this.WaitingForPlayersCountdown.RestartCountdown();
             }
         }
@@ -178,7 +186,7 @@ export default class BattleRoyale extends GameMode {
                     this.RestartGame();
             }
         } else if (!this.game_status.ended) {
-            if (this.room.GetPlayersInGame().length < this.min_players) {
+            if (this.room.GetPlayersInGame().length < this.gameSettings.min_players) {
                 this.WaitingForPlayersCountdown.StopCountdown();
             }
         }
@@ -263,8 +271,8 @@ export default class BattleRoyale extends GameMode {
         const snake = player.gameData.snake;
         if (snake.length === 0) return false;
         const head = snake[0];
-        const topLeftBorder = this.deadZoneKills ? this.mapShrinkSize : 0;
-        const bottomRightBorder = this.deadZoneKills ? this.grid_size - this.mapShrinkSize : this.grid_size;
+        const topLeftBorder = this.gameSettings.deadZoneKills ? this.mapShrinkSize : 0;
+        const bottomRightBorder = this.gameSettings.deadZoneKills ? this.grid_size - this.mapShrinkSize : this.grid_size;
         return head.x < topLeftBorder || head.x >= bottomRightBorder || head.y < topLeftBorder || head.y >= bottomRightBorder;
     }
     KillPlayerIfCollidingWithEnemy(player) {
@@ -337,7 +345,7 @@ export default class BattleRoyale extends GameMode {
     ShrinkMap() {
         this.mapShrinkSize++;
         const players = this.room.GetPlayersInGame();
-        if (this.deadZoneKills)
+        if (this.gameSettings.deadZoneKills)
             players.forEach(player => {
                 let snake = player.gameData.snake;
                 if (snake.length === 0) return;
@@ -358,7 +366,7 @@ export default class BattleRoyale extends GameMode {
                 this.apples = this.apples.filter(applefltr => apple !== applefltr);
             }
         })
-        this.gameSpeedRate += this.gameSpeedUpValue
+        this.gameSpeedRate += this.gameSettings.gameSpeedUpValue
         this.KillShortestCountdown.RestartCountdown();
     }
     SpawnGoldApple() {
