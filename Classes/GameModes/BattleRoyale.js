@@ -13,6 +13,7 @@ export default class BattleRoyale extends GameMode {
     apples = [];
     min_players = 2;
     deadZoneKills = false;
+    gameSpeedUpValue = 0.1;
     game_status = {
         started: false,
         ended: false,
@@ -28,12 +29,18 @@ export default class BattleRoyale extends GameMode {
     SpawnAppleCountdown = new Countdown(4, false, () => this.SpawnNewApple());
     updateTimeout;
     mapShrinkSize = 0;
+    gameSpeedRate = 1;
     MapShrinkCountdown = new Countdown(10, false, () => this.ShrinkMap())
     GoldAppleCountdown = new Countdown(10, false, () => this.SpawnGoldApple());
     KillShortestCountdown = new Countdown(5, false, () => this.KillShortestSnake());
     static CheckRequirements(settings) {
         if (settings.min_players == null) return { error: true, errorMessage: "min_players is not specified" };
+        if (isNaN(settings.min_players)) return { error: true, errorMessage: "min_players is not a number" };
+        if (parseInt(settings.min_players) < 2 || parseInt(settings.min_players) > 16) return { error: true, errorMessage: "min_players must be between 2 and 16" };
         if (settings.dead_zone_kills == null) return { error: true, errorMessage: "dead_zone_kills is not specified" };
+        if (settings.game_speed_up_value == null) return { error: true, errorMessage: "game_speed_up_value is not specified" };
+        if (isNaN(settings.game_speed_up_value)) return { error: true, errorMessage: "game_speed_up_value is not a number" };
+        if (parseFloat(settings.game_speed_up_value) < 0 || parseFloat(settings.game_speed_up_value) > 0.3) return { error: true, errorMessage: "game_speed_up_value is not between 0 and 0.3" };
         return { error: false };
     }
     CreatePlayerData(player, name, color) {
@@ -43,8 +50,9 @@ export default class BattleRoyale extends GameMode {
         settings.frame_time = 250
         settings.grid_size = 20
         super(room, settings);
-        this.min_players = settings.min_players;
+        this.min_players = parseInt(settings.min_players);
         this.deadZoneKills = settings.dead_zone_kills;
+        this.gameSpeedUpValue = parseFloat(settings.game_speed_up_value);
         clearTimeout(this.updateTimeout)
         this.updateTimeout = setTimeout(() => this.GameUpdate(), this.frame_time);
     }
@@ -53,6 +61,7 @@ export default class BattleRoyale extends GameMode {
         this.game_status.ended = false;
         this.game_status.winner = null;
         this.mapShrinkSize = 0
+        this.gameSpeedRate = 1;
         this.apples = [];
         clearTimeout(this.updateTimeout);
         this.updateTimeout = setTimeout(() => this.GameUpdate(), this.frame_time);
@@ -105,7 +114,7 @@ export default class BattleRoyale extends GameMode {
         }
         this.BroadcastGameUpdate();
         clearTimeout(this.updateTimeout);
-        this.updateTimeout = setTimeout(() => this.GameUpdate(), this.frame_time);
+        this.updateTimeout = setTimeout(() => this.GameUpdate(), this.frame_time / this.gameSpeedRate);
     }
     BroadcastGameUpdate() {
         const data = {}
@@ -349,6 +358,7 @@ export default class BattleRoyale extends GameMode {
                 this.apples = this.apples.filter(applefltr => apple !== applefltr);
             }
         })
+        this.gameSpeedRate += this.gameSpeedUpValue
         this.KillShortestCountdown.RestartCountdown();
     }
     SpawnGoldApple() {
