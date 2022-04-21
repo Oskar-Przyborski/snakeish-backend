@@ -283,6 +283,7 @@ export default class BattleRoyale extends GameMode {
         for (let i = 0; i < enemies.length; i++) {
             const enemy = enemies[i];
             const enemySnake = enemy.gameData.snake;
+            if (enemySnake.length === 0) continue;
             for (let j = 0; j < enemySnake.length; j++) {
                 if (enemySnake[j].x === head.x && enemySnake[j].y === head.y) {
                     if (j === 0) enemy.gameData.shouldBeKilled = true; //if head - kill enemy too
