@@ -10,4 +10,13 @@ export default class PlayerGameDataBattleRoyale extends PlayerGameData {
         this.snake = [];
         this.score = 0;
     }
+    ToJSON(){
+        return {
+            name: this.name,
+            score: this.score,
+            snake: this.snake,
+            color: this.color,
+            isKilled: this.isKilled
+        }
+    }
 }
